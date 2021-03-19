@@ -1,0 +1,16 @@
+repos:
+  - repo: https://github.com/pre-commit/mirrors-yapf
+    rev: ""
+    hooks:
+      - id: yapf
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v3.2.0
+    hooks:
+      - id: check-ast
+      - id: trailing-whitespace
+      - id: debug-statements
+      - id: end-of-file-fixer
+  - repo: https://gitlab.com/pycqa/flake8
+    rev: 3.8.4
+    hooks:
+      - id: flake8
