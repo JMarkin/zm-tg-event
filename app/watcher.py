@@ -81,7 +81,7 @@ class EventHandler(AIOEventHandler):
         await asyncio.wait([
             self.bot.send_message(
                 chat_id, f"Новое уведомление "
-                f"{ZM_URL}/zm/?view=event&eid={event_id}")
+                f"{ZM_URL}/?view=event&eid={event_id}")
             for chat_id in chat_ids
         ])
 
