@@ -41,49 +41,57 @@ class EventHandler(AIOEventHandler):
         self.events = set()
 
     def get_event_id(self, path):
+
+        m = re.match(r".*/([0-9]+)/00001-capture.jpg$", path)
+
+        if m:
+            return m.group(1), False
+
         m = re.match(r".*/([0-9]+)-video.mp4$", path)
 
         if not m:
-            return
+            return None, False
 
         event_id = m.group(1)
 
         if event_id in self.events:
-            return
+            return None, False
 
-        return event_id
+        return event_id, True
 
     async def on_closed(self, event):
-        event_id = self.get_event_id(event.src_path)
+        event_id, is_video = self.get_event_id(event.src_path)
 
-        if not event_id:
+        if not event_id or not is_video:
             return
 
         logger.info(f"Complete write video {event.src_path}")
         self.events.add(event_id)
 
     async def on_created(self, event):
-        event_id = self.get_event_id(event.src_path)
+        event_id, is_video = self.get_event_id(event.src_path)
 
         if not event_id:
             return
 
-        logger.info(f"New video {event.src_path}")
+        chat_ids = get_chat_ids()
+
+        if not is_video:
+            logger.info(f"New event {event_id}")
+            logger.info("Send message")
+            await asyncio.wait([
+                self.bot.send_message(
+                    chat_id, f"Новое уведомление "
+                    f"{ZM_URL}/?view=event&eid={event_id}")
+                for chat_id in chat_ids
+            ])
+            return
+
         while event_id not in self.events:
             await asyncio.sleep(2)
 
         if len(self.events) > 10:
             asyncio.create_task(self.clear_events())
-
-        chat_ids = get_chat_ids()
-
-        logger.info("Send message")
-        await asyncio.wait([
-            self.bot.send_message(
-                chat_id, f"Новое уведомление "
-                f"{ZM_URL}/?view=event&eid={event_id}")
-            for chat_id in chat_ids
-        ])
 
         logger.info("Send video")
 
